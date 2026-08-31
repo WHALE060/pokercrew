@@ -1,0 +1,13 @@
+{
+  "name": "PokerCrew",
+  "short_name": "PokerCrew",
+  "description": "Private poker clubs with friends",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#150F1B",
+  "theme_color": "#150F1B",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
