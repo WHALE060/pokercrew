@@ -50,13 +50,20 @@ function sha256(s: string): string {
 
 export class AccountService {
   private jwtKey: Uint8Array;
+  private adminEmails: Set<string>;
 
   constructor(
     private db: DatabaseSync,
     private mailer: Mailer,
-    jwtSecret: string
+    jwtSecret: string,
+    adminEmails: string[] = []
   ) {
     this.jwtKey = new TextEncoder().encode(jwtSecret);
+    this.adminEmails = new Set(adminEmails.map(normEmail).filter(Boolean));
+    // promote any existing accounts that match ADMIN_EMAILS (safe to run every startup)
+    for (const e of this.adminEmails) {
+      this.db.prepare("UPDATE users SET role = 'admin' WHERE email = ? AND role <> 'admin'").run(e);
+    }
   }
 
   // ---------- helpers ----------
@@ -150,13 +157,14 @@ export class AccountService {
     const id = generateId();
     const playerCode = this.uniquePlayerCode();
     const passwordHash = input.password ? await bcrypt.hash(input.password, 10) : null;
+    const role = this.adminEmails.has(email) ? "admin" : "player";
 
     this.db
       .prepare(
-        `INSERT INTO users (id, player_code, email, display_name, password_hash, chips, created_at, last_login_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO users (id, player_code, email, display_name, password_hash, role, chips, created_at, last_login_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
-      .run(id, playerCode, email, input.displayName, passwordHash, STARTING_CHIPS, nowIso(), nowIso());
+      .run(id, playerCode, email, input.displayName, passwordHash, role, STARTING_CHIPS, nowIso(), nowIso());
 
     const token = await this.createSession(id, input.deviceId, input.ip);
     return { user: this.findByPlayerCode(playerCode)!, token };

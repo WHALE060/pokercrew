@@ -15,6 +15,8 @@ export interface ServerOptions {
   dbPath?: string;
   jwtSecret: string;
   mailer?: Mailer;
+  /** emails that are automatically given the admin role */
+  adminEmails?: string[];
   /** shorter timers for tests */
   actionTimeoutMs?: number;
   nextHandDelayMs?: number;
@@ -23,7 +25,7 @@ export interface ServerOptions {
 export function buildServer(opts: ServerOptions): { app: FastifyInstance; accounts: AccountService; clubs: ClubService; tables: TableService } {
   const db = openDb(opts.dbPath ?? ":memory:");
   const mailer = opts.mailer ?? new ConsoleMailer();
-  const accounts = new AccountService(db, mailer, opts.jwtSecret);
+  const accounts = new AccountService(db, mailer, opts.jwtSecret, opts.adminEmails ?? []);
   const clubs = new ClubService(db);
   const tables = new TableService(db, { actionTimeoutMs: opts.actionTimeoutMs, nextHandDelayMs: opts.nextHandDelayMs });
 
@@ -285,7 +287,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     dbPath: process.env.DB_PATH ?? (process.env.RAILWAY_VOLUME_MOUNT_PATH ? process.env.RAILWAY_VOLUME_MOUNT_PATH + "/pokercrew.db" : "./pokercrew.db"),
     jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-me",
     mailer,
+    adminEmails: (process.env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
   });
+  if (process.env.ADMIN_EMAILS) console.log(`Admin accounts: ${process.env.ADMIN_EMAILS}`);
   const port = Number(process.env.PORT ?? 3000);
   app.listen({ port, host: "0.0.0.0" }).then(() => {
     console.log(`PokerCrew server listening on http://localhost:${port}`);

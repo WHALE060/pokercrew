@@ -22,7 +22,7 @@ npm start
 ```
 
 1. Open http://localhost:3000 and create your account.
-2. Make yourself admin (one-time): `sqlite3 pokercrew.db "UPDATE users SET role='admin' WHERE email='you@example.com';"` — or any SQLite tool.
+2. Make yourself admin: set the environment variable `ADMIN_EMAILS=you@example.com` (comma-separate several). Any account with that email is admin automatically — on signup or on the next restart.
 3. Refresh; an **Admin** tab appears in the bottom nav.
 4. Create a club, open a table, and invite people with the club code. Everyone starts with 10,000 play chips.
 
@@ -52,6 +52,10 @@ Environment variables:
 | `PORT` | `3000` | |
 | `DB_PATH` | `./pokercrew.db` | SQLite file for dev; swap to Postgres for prod |
 | `JWT_SECRET` | `dev-secret-change-me` | **Change this in production** |
+| `ADMIN_EMAILS` | – | comma-separated emails that get the admin role automatically |
+| `BREVO_API_KEY` | – | Brevo transactional email API key; if unset, codes are printed to logs |
+| `MAIL_FROM` | – | verified sender address in Brevo, e.g. `hello@pokercrew.co` |
+| `MAIL_FROM_NAME` | `PokerCrew` | sender display name |
 
 ## API
 
