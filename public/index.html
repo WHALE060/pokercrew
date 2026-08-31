@@ -10,6 +10,7 @@
 <meta property="og:image" content="/icon-512.png">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#150F1B">
 <style>
   :root { --bg:#150F1B; --bg2:#1C1224; --card:#241A2E; --line:rgba(255,255,255,.08); --text:#F3EDE6; --muted:#A79AB3; --gold:#E3B23C; --gold2:#F3D580; --teal:#5DE0B8; }
@@ -189,5 +190,6 @@
   </footer>
 </div>
 <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js").catch(()=>{});}</script>
 </body>
 </html>
