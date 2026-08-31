@@ -2,7 +2,7 @@
   "name": "PokerCrew",
   "short_name": "PokerCrew",
   "description": "Private poker clubs with friends",
-  "start_url": "/",
+  "start_url": "/app",
   "display": "standalone",
   "background_color": "#150F1B",
   "theme_color": "#150F1B",

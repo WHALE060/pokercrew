@@ -7,6 +7,7 @@ import { z } from "zod";
 import { openDb } from "./db.js";
 import { AccountService, AccountError, ConsoleMailer, type Mailer } from "./accounts.js";
 import { ClubService } from "./clubs.js";
+import { BrevoMailer } from "./mailer.js";
 import { TableService } from "./tables.js";
 import { attachWebSockets } from "./ws.js";
 
@@ -28,10 +29,11 @@ export function buildServer(opts: ServerOptions): { app: FastifyInstance; accoun
 
   const app = Fastify({ logger: false, forceCloseConnections: true });
   app.register(cors, { origin: true });
-  app.register(fastifyStatic, {
-    root: path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public"),
-    prefix: "/",
-  });
+  const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public");
+  app.register(fastifyStatic, { root: publicDir, prefix: "/" });
+  // marketing site at "/", the app itself at "/app"
+  app.get("/app", (_req, reply) => reply.sendFile("app.html"));
+  app.get("/app/*", (_req, reply) => reply.sendFile("app.html"));
 
   // map AccountError -> HTTP
   app.setErrorHandler((err: any, _req, reply) => {
@@ -273,9 +275,16 @@ export function buildServer(opts: ServerOptions): { app: FastifyInstance; accoun
 
 // run directly: `npx tsx src/server.ts`
 if (import.meta.url === `file://${process.argv[1]}`) {
+  const mailer = process.env.BREVO_API_KEY && process.env.MAIL_FROM
+    ? new BrevoMailer(process.env.BREVO_API_KEY, process.env.MAIL_FROM, process.env.MAIL_FROM_NAME ?? "PokerCrew")
+    : undefined; // falls back to ConsoleMailer (codes printed in logs)
+  if (mailer) console.log(`Email: sending via Brevo from ${process.env.MAIL_FROM}`);
+  else console.log("Email: BREVO_API_KEY/MAIL_FROM not set — codes will be printed to logs");
+
   const { app } = buildServer({
     dbPath: process.env.DB_PATH ?? (process.env.RAILWAY_VOLUME_MOUNT_PATH ? process.env.RAILWAY_VOLUME_MOUNT_PATH + "/pokercrew.db" : "./pokercrew.db"),
     jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-me",
+    mailer,
   });
   const port = Number(process.env.PORT ?? 3000);
   app.listen({ port, host: "0.0.0.0" }).then(() => {
